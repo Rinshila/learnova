@@ -1,0 +1,142 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>My Profile | Learnova</title>
+
+    <link rel="stylesheet" href="{% static 'css/profile.css' %}">
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+    <div class="profile-page">
+
+        <div class="profile-container">
+
+            <!-- LEFT SIDE -->
+            <div class="profile-left">
+
+                <h1>
+                    Welcome back,<br>
+                    {{ user.username }}!
+                </h1>
+
+                <p>
+                    Manage your profile and continue
+                    your learning journey with Learnova.
+                </p>
+
+                <div class="profile-illustration">
+
+                    <div class="circle circle-one"></div>
+                    <div class="circle circle-two"></div>
+
+                    <div class="avatar-large">
+                        {{ user.username|first|upper }}
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- RIGHT SIDE -->
+            <div class="profile-right">
+
+                <h2>My Profile</h2>
+
+                <p class="subtitle">
+                    Your personal information
+                </p>
+
+
+                <!-- Username -->
+                <div class="detail-group">
+                    <label>Username</label>
+
+                    <div class="detail-box">
+                        {{ user.username }}
+                    </div>
+                </div>
+
+
+                <!-- Email -->
+                <div class="detail-group">
+                    <label>Email</label>
+
+                    <div class="detail-box">
+                        {{ user.email }}
+                    </div>
+                </div>
+
+
+                <!-- Phone -->
+                <div class="detail-group">
+                    <label>Phone Number</label>
+
+                    <div class="detail-box">
+                        {% if profile.phone %}
+                            {{ profile.phone }}
+                        {% else %}
+                            Not added
+                        {% endif %}
+                    </div>
+                </div>
+
+
+                <!-- Age -->
+                <div class="detail-group">
+                    <label>Age</label>
+
+                    <div class="detail-box">
+                        {% if profile.age %}
+                            {{ profile.age }}
+                        {% else %}
+                            Not added
+                        {% endif %}
+                    </div>
+                </div>
+
+
+                <!-- Gender -->
+                <div class="detail-group">
+                    <label>Gender</label>
+
+                    <div class="detail-box">
+                        {% if profile.gender %}
+                            {{ profile.gender }}
+                        {% else %}
+                            Not added
+                        {% endif %}
+                    </div>
+                </div>
+
+
+                <!-- Buttons -->
+                <div class="button-area">
+
+                    <a href="{% url 'edit_profile' %}" class="edit-btn">
+                        Edit Profile
+                    </a>
+
+                    <a href="{% url 'home' %}" class="home-btn">
+                        Home
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</body>
+</html>

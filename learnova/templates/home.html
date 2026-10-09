@@ -1,0 +1,297 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Learnova | Learn Smarter</title>
+
+    <link rel="stylesheet"
+          href="{% static 'css/home.css' %}">
+
+</head>
+
+<body>
+
+<!-- ================= NAVBAR ================= -->
+
+<header class="navbar">
+
+    <div class="logo">
+        <div class="logo-icon">L</div>
+        <span>Learnova</span>
+    </div>
+
+    <nav>
+
+        <a href="{% url 'home' %}" class="active">
+            Home
+        </a>
+
+        <a href="#features">
+            Features
+        </a>
+
+        <a href="#about">
+            About
+        </a>
+
+    </nav>
+
+    <div class="nav-buttons">
+
+        <a href="{% url 'profile' %}">
+    <button>Profile</button>
+</a>
+
+        <a href="{% url 'login' %}"
+           class="login-btn">
+            Login
+        </a>
+
+        <a href="{% url 'register' %}"
+           class="register-btn">
+            Get Started
+        </a>
+
+    </div>
+
+</header>
+
+
+<!-- ================= HERO ================= -->
+
+<section class="hero">
+
+    <div class="hero-content">
+
+        <div class="small-title">
+            ✦ SMART LEARNING PLATFORM
+        </div>
+
+        <h1>
+            Learn smarter.
+            <span>Grow faster.</span>
+        </h1>
+
+        <p>
+            Learnova is your personalized learning companion.
+            Discover study materials, practice with smart quizzes,
+            track your progress and make learning more effective.
+        </p>
+
+        <div class="hero-buttons">
+
+            <a href="{% url 'register' %}"
+               class="primary-btn">
+                Start Learning →
+            </a>
+
+            <a href="#features"
+               class="secondary-btn">
+                Explore Features
+            </a>
+
+        </div>
+
+    </div>
+
+
+    <!-- HERO VISUAL -->
+
+    <div class="hero-visual">
+
+        <div class="circle"></div>
+
+        <div class="learning-card">
+
+            <div class="student-icon">
+                🎓
+            </div>
+
+            <h3>
+                Your Learning Journey
+            </h3>
+
+            <p>
+                Study • Practice • Improve
+            </p>
+
+            <div class="progress">
+
+                <div class="progress-text">
+                    <span>Learning Progress</span>
+                    <b>75%</b>
+                </div>
+
+                <div class="progress-bar">
+                    <div></div>
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="floating-card card-one">
+            📚 Study Materials
+        </div>
+
+        <div class="floating-card card-two">
+            ✓ Smart Quizzes
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- ================= FEATURES ================= -->
+
+<section class="features" id="features">
+
+    <div class="section-heading">
+
+        <p>WHY LEARNOVA?</p>
+
+        <h2>
+            Everything you need to learn better
+        </h2>
+
+        <span>
+            Make your study experience more organized,
+            personalized and engaging.
+        </span>
+
+    </div>
+
+
+    <div class="feature-grid">
+
+        <div class="feature-card">
+
+            <div class="feature-icon">
+                📚
+            </div>
+
+            <h3>
+                Study Materials
+            </h3>
+
+            <p>
+                Organize and access your learning
+                materials in one place.
+            </p>
+
+        </div>
+
+
+        <div class="feature-card">
+
+            <div class="feature-icon">
+                🤖
+            </div>
+
+            <h3>
+                AI Study Assistant
+            </h3>
+
+            <p>
+                Get intelligent assistance to
+                understand and learn your subjects.
+            </p>
+
+        </div>
+
+
+        <div class="feature-card">
+
+            <div class="feature-icon">
+                📝
+            </div>
+
+            <h3>
+                Smart Quizzes
+            </h3>
+
+            <p>
+                Practice your knowledge with
+                interactive quizzes.
+            </p>
+
+        </div>
+
+
+        <div class="feature-card">
+
+            <div class="feature-icon">
+                📊
+            </div>
+
+            <h3>
+                Track Progress
+            </h3>
+
+            <p>
+                Monitor your learning progress
+                and identify areas to improve.
+            </p>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- ================= ABOUT ================= -->
+
+<section class="about" id="about">
+
+    <div>
+
+        <p class="about-label">
+            ABOUT LEARNOVA
+        </p>
+
+        <h2>
+            A smarter way to learn
+        </h2>
+
+        <p>
+            Learnova brings your study resources,
+            practice activities and learning progress
+            together in one simple platform.
+        </p>
+
+    </div>
+
+</section>
+
+
+<!-- ================= FOOTER ================= -->
+
+<footer>
+
+    <div class="footer-logo">
+        Learnova
+    </div>
+
+    <p>
+        Learn smarter. Grow further.
+    </p>
+
+    <p class="copyright">
+        © 2026 Learnova. All rights reserved.
+    </p>
+
+</footer>
+
+
+</body>
+</html>

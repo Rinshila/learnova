@@ -1,0 +1,398 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: #eaf8df;
+
+    min-height: 100vh;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+
+/* MAIN CONTAINER */
+
+.login-container {
+
+    width: 900px;
+    min-height: 520px;
+
+    background: white;
+
+    border-radius: 22px;
+
+    display: flex;
+
+    overflow: hidden;
+
+    box-shadow: 0 15px 40px rgba(70, 90, 50, 0.12);
+}
+
+
+/* LEFT SIDE */
+
+.left-section {
+
+    width: 50%;
+
+    padding: 45px;
+
+    background: #ffffff;
+}
+
+
+/* BRAND */
+
+.brand {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+
+    font-size: 22px;
+
+    font-weight: 600;
+
+    color: #222;
+}
+
+.logo {
+
+    width: 40px;
+    height: 40px;
+
+    border-radius: 11px;
+
+    background: #6d55b5;
+
+    color: white;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    font-weight: bold;
+
+    font-size: 20px;
+}
+
+
+/* WELCOME */
+
+.welcome-content {
+
+    margin-top: 100px;
+}
+
+.welcome-content h1 {
+
+    font-size: 45px;
+
+    line-height: 1.15;
+
+    color: #202020;
+
+    margin-bottom: 18px;
+}
+
+.welcome-content p {
+
+    width: 320px;
+
+    font-size: 13px;
+
+    line-height: 1.7;
+
+    color: #777;
+}
+
+
+/* LEARNING BOX */
+
+.learning-box {
+
+    margin-top: 35px;
+
+    width: 300px;
+
+    height: 80px;
+
+    background: #f0f8e9;
+
+    border-radius: 15px;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 15px;
+
+    padding: 20px;
+
+    color: #555;
+
+    font-size: 13px;
+}
+
+.book-icon {
+
+    width: 45px;
+    height: 45px;
+
+    background: #e1efd2;
+
+    border-radius: 12px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    font-size: 22px;
+}
+
+
+/* RIGHT SIDE */
+
+.right-section {
+
+    width: 50%;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    padding: 30px;
+}
+
+
+/* LOGIN CARD */
+
+.login-card {
+
+    width: 100%;
+
+    max-width: 330px;
+
+    padding: 30px;
+
+    background: white;
+
+    border-radius: 18px;
+
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+}
+
+
+.login-card h2 {
+
+    font-size: 22px;
+
+    color: #202020;
+
+    margin-bottom: 7px;
+}
+
+
+.subtitle {
+
+    color: #888;
+
+    font-size: 12px;
+
+    margin-bottom: 28px;
+}
+
+
+/* INPUT */
+
+.input-group {
+
+    margin-bottom: 18px;
+}
+
+.input-group label {
+
+    display: block;
+
+    font-size: 11px;
+
+    color: #333;
+
+    margin-bottom: 7px;
+}
+
+.input-group input {
+
+    width: 100%;
+
+    height: 40px;
+
+    padding: 0 12px;
+
+    border: 1px solid #d0d0d0;
+
+    border-radius: 7px;
+
+    font-size: 12px;
+
+    outline: none;
+}
+
+.input-group input:focus {
+
+    border-color: #6d55b5;
+
+    box-shadow: 0 0 0 2px rgba(109, 85, 181, 0.1);
+}
+
+
+/* FORGOT PASSWORD */
+
+.forgot {
+
+    text-align: right;
+
+    margin-top: -8px;
+
+    margin-bottom: 20px;
+}
+
+.forgot a {
+
+    color: #6d55b5;
+
+    text-decoration: none;
+
+    font-size: 11px;
+}
+
+
+/* LOGIN BUTTON */
+
+button {
+
+    width: 100%;
+
+    height: 42px;
+
+    border: none;
+
+    border-radius: 7px;
+
+    background: #ff8508;
+
+    color: white;
+
+    font-size: 13px;
+
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+button:hover {
+
+    background: #ed7600;
+}
+
+
+/* REGISTER */
+
+.register-text {
+
+    text-align: center;
+
+    margin-top: 20px;
+
+    color: #888;
+
+    font-size: 11px;
+}
+
+.register-text a {
+
+    color: #6d55b5;
+
+    text-decoration: none;
+
+    font-weight: 600;
+}
+
+
+/* MESSAGE */
+
+.message {
+
+    background: #fff0f0;
+
+    color: #d93036;
+
+    padding: 9px;
+
+    border-radius: 6px;
+
+    font-size: 11px;
+
+    margin-bottom: 15px;
+}
+
+
+/* MOBILE */
+
+@media (max-width: 800px) {
+
+    body {
+        padding: 20px;
+    }
+
+    .login-container {
+
+        width: 100%;
+
+        flex-direction: column;
+    }
+
+    .left-section,
+    .right-section {
+
+        width: 100%;
+    }
+
+    .welcome-content {
+
+        margin-top: 50px;
+    }
+
+}
+
+@media (max-width: 500px) {
+
+    .left-section {
+
+        padding: 30px;
+    }
+
+    .welcome-content h1 {
+
+        font-size: 35px;
+    }
+
+    .login-card {
+
+        padding: 25px 20px;
+    }
+
+}

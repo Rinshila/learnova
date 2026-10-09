@@ -1,0 +1,322 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background: #e8f6dc;
+    color: #222;
+}
+
+
+/* Main page */
+
+.profile-page {
+    min-height: 100vh;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    padding: 50px 20px;
+}
+
+
+/* Main white card */
+
+.profile-container {
+    width: 100%;
+    max-width: 1050px;
+
+    background: white;
+
+    border-radius: 22px;
+
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+
+    padding: 45px;
+
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08);
+}
+
+
+/* LEFT SIDE */
+
+.profile-left {
+    padding: 20px 45px 20px 20px;
+
+    border-right: 1px solid #eeeeee;
+}
+
+.profile-left h1 {
+    font-size: 32px;
+    line-height: 1.4;
+
+    font-weight: 600;
+
+    color: #222;
+}
+
+.profile-left p {
+    margin-top: 15px;
+
+    font-size: 13px;
+    line-height: 1.7;
+
+    color: #777;
+
+    max-width: 350px;
+}
+
+
+/* Illustration */
+
+.profile-illustration {
+    height: 330px;
+
+    margin-top: 25px;
+
+    position: relative;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+
+/* Background circles */
+
+.circle {
+    position: absolute;
+
+    border-radius: 50%;
+}
+
+.circle-one {
+    width: 250px;
+    height: 250px;
+
+    background: #e6f4d8;
+}
+
+.circle-two {
+    width: 180px;
+    height: 180px;
+
+    background: #f8e9bc;
+
+    bottom: 25px;
+    right: 45px;
+}
+
+
+/* Avatar */
+
+.avatar-large {
+    position: relative;
+    z-index: 2;
+
+    width: 150px;
+    height: 150px;
+
+    border-radius: 50%;
+
+    background: #6d55b5;
+
+    color: white;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    font-size: 65px;
+    font-weight: 600;
+
+    box-shadow: 0 10px 20px rgba(109, 85, 181, 0.25);
+}
+
+
+/* RIGHT SIDE */
+
+.profile-right {
+    padding: 5px 10px 5px 45px;
+}
+
+.profile-right h2 {
+    font-size: 25px;
+
+    font-weight: 600;
+
+    color: #222;
+}
+
+.subtitle {
+    font-size: 12px;
+
+    color: #888;
+
+    margin-top: 5px;
+    margin-bottom: 25px;
+}
+
+
+/* Details */
+
+.detail-group {
+    margin-bottom: 16px;
+}
+
+.detail-group label {
+    display: block;
+
+    font-size: 12px;
+
+    color: #55439a;
+
+    margin-bottom: 7px;
+}
+
+.detail-box {
+    width: 100%;
+
+    min-height: 42px;
+
+    padding: 11px 14px;
+
+    border: 1px solid #b9a8df;
+
+    border-radius: 8px;
+
+    background: white;
+
+    font-size: 12px;
+
+    color: #555;
+}
+
+
+/* Buttons */
+
+.button-area {
+    display: flex;
+
+    gap: 12px;
+
+    margin-top: 25px;
+}
+
+.edit-btn,
+.home-btn {
+    text-decoration: none;
+
+    text-align: center;
+
+    padding: 11px 22px;
+
+    border-radius: 8px;
+
+    font-size: 12px;
+
+    font-weight: 600;
+
+    transition: 0.2s;
+}
+
+
+/* Orange button */
+
+.edit-btn {
+    background: #ff8500;
+
+    color: white;
+
+    flex: 1;
+}
+
+.edit-btn:hover {
+    background: #e87500;
+}
+
+
+/* Home button */
+
+.home-btn {
+    border: 1px solid #b9a8df;
+
+    color: #6d55b5;
+
+    background: white;
+}
+
+.home-btn:hover {
+    background: #f5f1ff;
+}
+
+
+/* Mobile */
+
+@media (max-width: 800px) {
+
+    .profile-container {
+        grid-template-columns: 1fr;
+
+        padding: 30px 25px;
+    }
+
+    .profile-left {
+        border-right: none;
+
+        border-bottom: 1px solid #eeeeee;
+
+        padding: 10px 10px 30px;
+
+        text-align: center;
+    }
+
+    .profile-left p {
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .profile-right {
+        padding: 30px 10px 10px;
+    }
+
+    .profile-illustration {
+        height: 230px;
+    }
+
+    .avatar-large {
+        width: 120px;
+        height: 120px;
+
+        font-size: 50px;
+    }
+}
+
+
+@media (max-width: 500px) {
+
+    .profile-page {
+        padding: 20px 12px;
+    }
+
+    .profile-container {
+        border-radius: 15px;
+    }
+
+    .profile-left h1 {
+        font-size: 25px;
+    }
+
+    .button-area {
+        flex-direction: column;
+    }
+
+    .home-btn {
+        width: 100%;
+    }
+}

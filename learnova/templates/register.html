@@ -1,0 +1,101 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Register | Learnova</title>
+
+    <link rel="stylesheet" href="{% static 'css/register.css' %}">
+</head>
+
+<body>
+
+<div class="register-container">
+
+    <!-- LEFT SIDE -->
+    <div class="left-section">
+
+        <h1>Are you ready to<br>start learning?</h1>
+
+        <div class="illustration">
+            <div class="book book-one"></div>
+            <div class="book book-two"></div>
+
+            <div class="person">
+                <div class="head"></div>
+                <div class="hair"></div>
+                <div class="body"></div>
+            </div>
+        </div>
+
+    </div>
+
+
+    <!-- RIGHT SIDE -->
+    <div class="right-section">
+
+        <div class="form-card">
+
+            <h2>Fill in your details</h2>
+
+            <p class="subtitle">
+                Create your Learnova account
+            </p>
+
+            <form method="POST">
+
+                {% csrf_token %}
+
+                <!-- FORM ERRORS -->
+                {{ form.non_field_errors }}
+
+                <!-- USERNAME -->
+                <div class="input-group">
+                    <label>Username</label>
+                    {{ form.username }}
+                    {{ form.username.errors }}
+                </div>
+
+                <!-- EMAIL -->
+                <div class="input-group">
+                    <label>Email</label>
+                    {{ form.email }}
+                    {{ form.email.errors }}
+                </div>
+
+                <!-- PASSWORD -->
+                <div class="input-group">
+                    <label>Password</label>
+                    {{ form.password }}
+                    {{ form.password.errors }}
+                </div>
+
+                <!-- CONFIRM PASSWORD -->
+                <div class="input-group">
+                    <label>Confirm Password</label>
+                    {{ form.confirm_password }}
+                    {{ form.confirm_password.errors }}
+                </div>
+
+                <button type="submit">
+                    Register Now
+                </button>
+
+            </form>
+
+            <p class="login-text">
+                Already have an account?
+                <a href="{% url 'login' %}">Login</a>
+            </p>
+
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+</html>
