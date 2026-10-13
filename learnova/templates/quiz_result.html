@@ -1,0 +1,83 @@
+
+{% extends "quiz_base.html" %}
+
+{% block title %}Quiz Results | Learnova{% endblock %}
+
+{% block content %}
+
+<section class="result-page">
+    <div class="result-hero">
+        <div class="result-trophy">✦</div>
+        <span class="eyebrow">QUIZ COMPLETED</span>
+        <h1>Well done!</h1>
+        <p>You have completed {{ result.quiz.title }}.</p>
+
+        <div class="score-circle">
+            <strong>{{ result.percentage|floatformat:0 }}%</strong>
+            <span>Your Score</span>
+        </div>
+
+        <div class="score-summary">
+            <div>
+                <strong>{{ result.score }}/{{ result.total_questions }}</strong>
+                <span>Correct Answers</span>
+            </div>
+            <div>
+                <strong>{{ result.completed_at|date:"d M Y" }}</strong>
+                <span>Completed On</span>
+            </div>
+        </div>
+
+        <div class="result-actions">
+            <a class="btn" href="{% url 'quiz_list' %}">Back to Quiz Home</a>
+            <a class="btn btn-outline"
+               href="{% url 'take_quiz' result.quiz.id %}">Try Again</a>
+        </div>
+    </div>
+
+    <section class="answer-review">
+        <h2>Review Your Answers</h2>
+        <p>Use this section to revise questions you missed.</p>
+
+        {% for item in review %}
+            <article class="review-card">
+                <span class="review-number">QUESTION {{ forloop.counter }}</span>
+                <h3>{{ item.question.question_text }}</h3>
+
+                {% if item.is_correct %}
+                    <p class="answer-correct">✓ Your answer is correct.</p>
+                {% else %}
+                    <p class="answer-wrong">Your answer was incorrect.</p>
+                {% endif %}
+
+                <p>
+                    <strong>Your answer:</strong>
+                    {% if item.selected %}
+                        {{ item.selected }}
+                    {% else %}
+                        Not answered
+                    {% endif %}
+                </p>
+
+                <p>
+                    <strong>Correct option:</strong>
+                    {{ item.correct }}
+                </p>
+
+                <p class="correct-option-text">
+                    {% if item.correct == "A" %}
+                        {{ item.question.option_a }}
+                    {% elif item.correct == "B" %}
+                        {{ item.question.option_b }}
+                    {% elif item.correct == "C" %}
+                        {{ item.question.option_c }}
+                    {% else %}
+                        {{ item.question.option_d }}
+                    {% endif %}
+                </p>
+            </article>
+        {% endfor %}
+    </section>
+</section>
+
+{% endblock %}

@@ -1,0 +1,45 @@
+
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Learnova Quiz{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/quiz.css' %}">
+</head>
+<body>
+
+    <header class="quiz-header">
+        <a class="brand" href="{% url 'home' %}">
+            <span class="brand-mark">L</span>
+            Learnova
+        </a>
+
+        <nav class="quiz-nav">
+            <a href="{% url 'home' %}">Home</a>
+            <a href="{% url 'study_materials' %}">Study Materials</a>
+            <a href="{% url 'quiz_list' %}">Quizzes</a>
+        </nav>
+    </header>
+
+    <main class="page-container">
+        {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                    <div class="message {{ message.tags }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="quiz-footer">
+        Learnova · Learn something new every day
+    </footer>
+
+</body>
+</html>

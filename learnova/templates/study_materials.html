@@ -1,0 +1,540 @@
+
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Study Materials | Learnova</title>
+
+    <link rel="stylesheet"
+          href="{% static 'css/study_materials.css' %}">
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<header class="navbar">
+    <a href="/" class="brand">
+        <span class="brand-icon">L</span>
+        <span>Learnova</span>
+    </a>
+
+    <nav class="nav-links">
+        <a href="/">Home</a>
+
+        <a href="{% url 'study_materials' %}" class="active">
+            Study Materials
+        </a>
+
+        <a href="{% url 'quiz_list' %}">Quizzes</a>
+
+        <a href="{% url 'profile' %}">Profile</a>
+    </nav>
+
+    <a href="{% url 'profile' %}" class="user-menu">
+        <span class="avatar">
+            {{ request.user.username|first|upper }}
+        </span>
+
+        <span class="username">
+            {{ request.user.username }}
+        </span>
+
+        <span class="dropdown-arrow">⌄</span>
+    </a>
+</header>
+
+
+<main class="page-container">
+
+    <!-- HERO -->
+    <section class="hero">
+        <div class="hero-content">
+            <span class="eyebrow">YOUR LEARNING SPACE</span>
+
+            <h1>Study Materials</h1>
+
+            <p>
+                Upload notes, discover resources, and turn your PDFs
+                into simple study notes.
+            </p>
+        </div>
+
+        <div class="hero-art" aria-hidden="true">
+            <div class="art-circle"></div>
+            <div class="art-spark spark-one">✦</div>
+            <div class="art-spark spark-two">●</div>
+
+            <div class="books-illustration">
+                <div class="book book-top">
+                    <span>PDF</span>
+                </div>
+
+                <div class="book book-green"></div>
+                <div class="book book-purple"></div>
+                <div class="book book-bottom"></div>
+
+                <div class="plant">
+                    <span>❧</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- DJANGO MESSAGES -->
+    {% if messages %}
+    <section class="messages" aria-live="polite">
+        {% for message in messages %}
+        <div class="message {{ message.tags }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </section>
+    {% endif %}
+
+
+    <!-- UPLOAD AND EXTERNAL RESOURCES -->
+    <section class="top-panels">
+
+        <!-- UPLOAD PANEL -->
+        <div class="upload-panel">
+            <div class="panel-icon upload-icon">♧</div>
+
+            <div class="panel-content">
+                <span class="eyebrow">SHARE YOUR NOTES</span>
+
+                <h2>Upload Study Material</h2>
+
+                <p>
+                    Add your PDF notes and make them easily accessible
+                    anytime, anywhere.
+                </p>
+
+                <a href="#upload-form" class="btn btn-purple">
+                    <span>⇧</span> Upload PDF
+                </a>
+            </div>
+
+            <div class="upload-decoration" aria-hidden="true">
+                ▤
+            </div>
+        </div>
+
+
+        <!-- RESOURCE SEARCH -->
+        <div class="resource-panel">
+            <div class="panel-icon resource-icon">◎</div>
+
+            <div class="panel-content">
+                <span class="eyebrow green-label">
+                    LEARN SOMETHING NEW
+                </span>
+
+                <h2>Explore Learning Resources</h2>
+
+                <p>
+                    Search for any subject, topic, or concept
+                    on the web.
+                </p>
+
+                <form action="https://www.google.com/search"
+                      method="GET"
+                      target="_blank"
+                      class="resource-search">
+
+                    <label for="web-search" class="sr-only">
+                        Search learning resources
+                    </label>
+
+                    <input type="search"
+                           id="web-search"
+                           name="q"
+                           placeholder="Search any subject or topic..."
+                           required>
+
+                    <button type="submit" aria-label="Search resources">
+                        ⌕
+                    </button>
+                </form>
+            </div>
+        </div>
+
+    </section>
+
+
+    <!-- UPLOAD FORM -->
+    <section class="upload-section" id="upload-form">
+        <div class="section-title">
+            <div>
+                <span class="eyebrow">SHARE YOUR NOTES</span>
+                <h2>Upload Study Material</h2>
+                <p>Choose a PDF and organize it by subject and topic.</p>
+            </div>
+        </div>
+
+        <form method="POST"
+              enctype="multipart/form-data"
+              class="upload-form">
+
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <div class="error-box">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+
+            <div class="form-grid">
+
+                <div class="form-field">
+                    <label for="{{ form.title.id_for_label }}">
+                        Material Title
+                    </label>
+                    {{ form.title }}
+                    {{ form.title.errors }}
+                </div>
+
+                <div class="form-field">
+                    <label for="{{ form.subject.id_for_label }}">
+                        Subject
+                    </label>
+                    {{ form.subject }}
+                    {{ form.subject.errors }}
+                </div>
+
+                <div class="form-field">
+                    <label for="{{ form.topic.id_for_label }}">
+                        Topic
+                    </label>
+                    {{ form.topic }}
+                    {{ form.topic.errors }}
+                </div>
+
+                <div class="form-field">
+                    <label for="{{ form.pdf_file.id_for_label }}">
+                        PDF File
+                    </label>
+                    {{ form.pdf_file }}
+                    {{ form.pdf_file.errors }}
+                    <small>PDF files only. Maximum size: 10 MB.</small>
+                </div>
+
+                <div class="form-field full-width">
+                    <label for="{{ form.description.id_for_label }}">
+                        Description
+                    </label>
+                    {{ form.description }}
+                    {{ form.description.errors }}
+                </div>
+
+            </div>
+
+            <button type="submit" class="btn btn-purple">
+                ⇧ Upload Material
+            </button>
+        </form>
+    </section>
+
+
+    <!-- SEARCH FILTERS -->
+    <section class="filter-bar" id="library">
+
+        <form method="GET"
+              action="{% url 'study_materials' %}#library"
+              class="filter-form">
+
+            <div class="filter-search">
+                <span>⌕</span>
+
+                <label for="search-materials" class="sr-only">
+                    Search study materials
+                </label>
+
+                <input type="search"
+                       id="search-materials"
+                       name="q"
+                       value="{{ query }}"
+                       placeholder="Search title, subject, or topic...">
+            </div>
+
+            <label class="sr-only" for="subject-filter">
+                Filter by subject
+            </label>
+
+            <select name="subject"
+                    id="subject-filter"
+                    class="filter-select">
+
+                <option value="">All Subjects</option>
+
+                {% for item in subjects %}
+                <option value="{{ item }}"
+                    {% if subject_filter == item %}selected{% endif %}>
+                    {{ item }}
+                </option>
+                {% endfor %}
+
+            </select>
+
+            <label class="sr-only" for="topic-filter">
+                Filter by topic
+            </label>
+
+            <select name="topic"
+                    id="topic-filter"
+                    class="filter-select">
+
+                <option value="">All Topics</option>
+
+                {% for item in topics %}
+                <option value="{{ item }}"
+                    {% if topic_filter == item %}selected{% endif %}>
+                    {{ item }}
+                </option>
+                {% endfor %}
+
+            </select>
+
+            <button type="submit" class="btn btn-purple filter-submit">
+                Search
+            </button>
+
+            <a href="{% url 'study_materials' %}#library"
+               class="btn btn-clear">
+                Clear
+            </a>
+
+        </form>
+    </section>
+
+
+    <!-- LIBRARY AND POPULAR SUBJECTS -->
+    <section class="library-layout">
+
+        <div class="library-main">
+
+            <div class="library-heading">
+                <div>
+                    <span class="eyebrow">YOUR STUDY LIBRARY</span>
+
+                    <h2>Available Materials</h2>
+
+                    <p>
+                        Access your uploaded notes and study resources
+                        in one place.
+                    </p>
+                </div>
+
+                <span class="total-badge">
+                    Total Materials: {{ materials|length }}
+                </span>
+            </div>
+
+
+            {% if materials %}
+
+            <div class="material-grid">
+
+                {% for material in materials %}
+
+                <article class="material-card">
+
+                    <div class="material-card-top">
+                        <div class="pdf-icon">
+                            <span>PDF</span>
+                        </div>
+
+                        <span class="subject-tag">
+                            {{ material.subject }}
+                        </span>
+
+                        <span class="card-dots">⋮</span>
+                    </div>
+
+
+                    <h3>{{ material.title }}</h3>
+
+                    <p class="topic-line">
+                        Topic: {{ material.topic }}
+                    </p>
+
+                    {% if material.description %}
+                    <p class="description">
+                        {{ material.description|truncatechars:125 }}
+                    </p>
+                    {% else %}
+                    <p class="description">
+                        Open this study material to review your notes
+                        and practice your subject.
+                    </p>
+                    {% endif %}
+
+
+                    <div class="material-meta">
+                        <span>
+                            <span class="meta-icon">♟</span>
+                            By {{ material.uploaded_by.username }}
+                        </span>
+
+                        <span>
+                            <span class="meta-icon">▦</span>
+                            {{ material.uploaded_at|date:"d M Y" }}
+                        </span>
+                    </div>
+
+
+                    <div class="card-actions">
+
+                        <a href="{% url 'view_pdf' material.pk %}"
+                           target="_blank"
+                           rel="noopener"
+                           class="btn btn-view">
+                            ◉ View PDF
+                        </a>
+
+                        <a href="{% url 'download_pdf' material.pk %}"
+                           class="btn btn-download">
+                            ⇩ Download
+                        </a>
+
+                    </div>
+
+
+                    <!-- AI SUMMARY -->
+                    <div class="summary-section">
+
+                        <div class="summary-heading">
+                            <span>✦</span>
+                            <h4>AI Study Summary</h4>
+                        </div>
+
+                        {% if material.summary %}
+
+                        <div class="summary-content">
+                            {{ material.summary|linebreaksbr }}
+                        </div>
+
+                        {% else %}
+
+                        <p class="summary-placeholder">
+                            Turn your PDF into easy-to-understand notes.
+                        </p>
+
+                        {% endif %}
+
+                        <form method="POST"
+                              action="{% url 'summarize_pdf' material.pk %}">
+
+                            {% csrf_token %}
+
+                            <button type="submit" class="btn btn-summary">
+                                {% if material.summary %}
+                                    Regenerate Summary
+                                {% else %}
+                                    Summarize PDF with AI
+                                {% endif %}
+                            </button>
+
+                        </form>
+
+                    </div>
+
+                </article>
+
+                {% endfor %}
+
+            </div>
+
+            {% else %}
+
+            <div class="empty-state">
+                <div class="empty-icon">📚</div>
+
+                <h3>No study materials found</h3>
+
+                <p>
+                    Try changing your search filters or upload your
+                    first PDF to get started.
+                </p>
+
+                <a href="#upload-form" class="btn btn-purple">
+                    Upload Study Material
+                </a>
+            </div>
+
+            {% endif %}
+
+        </div>
+
+
+        <!-- POPULAR SUBJECTS SIDEBAR -->
+        <aside class="popular-panel">
+
+            <div class="popular-art" aria-hidden="true">
+                <span class="bulb">💡</span>
+                <span class="mini-books">📚</span>
+            </div>
+
+            <h3>Popular Subjects</h3>
+
+            <div class="popular-list">
+
+                <a href="{% url 'study_materials' %}?subject=Computer%20Science#library">
+                    <span class="popular-icon blue">‹/›</span>
+                    <span>Computer Science</span>
+                    <span class="popular-arrow">›</span>
+                </a>
+
+                <a href="{% url 'study_materials' %}?subject=Mathematics#library">
+                    <span class="popular-icon green">▦</span>
+                    <span>Mathematics</span>
+                    <span class="popular-arrow">›</span>
+                </a>
+
+                <a href="{% url 'study_materials' %}?subject=Physics#library">
+                    <span class="popular-icon purple">⚛</span>
+                    <span>Physics</span>
+                    <span class="popular-arrow">›</span>
+                </a>
+
+                <a href="{% url 'study_materials' %}?subject=Chemistry#library">
+                    <span class="popular-icon orange">⚗</span>
+                    <span>Chemistry</span>
+                    <span class="popular-arrow">›</span>
+                </a>
+
+                <a href="{% url 'study_materials' %}?subject=English#library">
+                    <span class="popular-icon violet">▤</span>
+                    <span>English</span>
+                    <span class="popular-arrow">›</span>
+                </a>
+
+                <a href="{% url 'study_materials' %}#library">
+                    <span class="popular-icon violet">⠿</span>
+                    <span>Other Subjects</span>
+                    <span class="popular-arrow">›</span>
+                </a>
+
+            </div>
+
+        </aside>
+
+    </section>
+
+</main>
+
+
+<!-- FOOTER -->
+<footer class="footer">
+    <div class="footer-decoration left-decoration">❧</div>
+
+    <p>Learnova · Learn something new every day.</p>
+
+    <div class="footer-decoration right-decoration">❧</div>
+</footer>
+
+</body>
+</html>

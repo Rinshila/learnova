@@ -173,7 +173,9 @@
 
     <div class="feature-grid">
 
-        <div class="feature-card">
+    
+
+            <a href="{% url 'study_materials' %}" class="feature-card">
 
             <div class="feature-icon">
                 📚
@@ -187,11 +189,13 @@
                 Organize and access your learning
                 materials in one place.
             </p>
+            </a>    
+        
 
-        </div>
-
-
-        <div class="feature-card">
+        
+        
+            
+            <a href="{% url 'ai_assistant' %}" class="feature-card">
 
             <div class="feature-icon">
                 🤖
@@ -206,10 +210,12 @@
                 understand and learn your subjects.
             </p>
 
-        </div>
+        </a>    
 
 
-        <div class="feature-card">
+        
+            
+        <a href="{% url 'quiz_list' %}" class="feature-card">
 
             <div class="feature-icon">
                 📝
@@ -223,8 +229,8 @@
                 Practice your knowledge with
                 interactive quizzes.
             </p>
-
-        </div>
+        </a>
+        
 
 
         <div class="feature-card">

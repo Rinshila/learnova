@@ -1,0 +1,254 @@
+
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Study Assistant | Learnova</title>
+    <link rel="stylesheet" href="{% static 'css/ai_assistant.css' %}">
+</head>
+<body>
+
+<div class="app-layout">
+
+    <aside class="sidebar">
+        <a href="/" class="brand">Learn<span>ova</span></a>
+
+        <p class="menu-label">LEARNING SPACE</p>
+
+        <a href="/" class="nav-link">⌂ &nbsp; Home</a>
+        <a href="/study-materials/" class="nav-link">▤ &nbsp; Study Materials</a>
+        <a href="/quizzes/" class="nav-link">✎ &nbsp; Smart Quizzes</a>
+        <a href="{% url 'ai_assistant' %}" class="nav-link active">
+            ✧ &nbsp; AI Study Assistant
+        </a>
+
+        <div class="sidebar-bottom">
+            <div class="avatar">{{ request.user.username|first|upper }}</div>
+            <div>
+                <strong>{{ request.user.username }}</strong>
+                <small>Student</small>
+            </div>
+        </div>
+    </aside>
+
+    <main class="main-content">
+
+        <header class="topbar">
+            <div>
+                <h2>AI Study Assistant</h2>
+                <p>Ask questions. Understand better. Learn smarter.</p>
+            </div>
+            <a href="/" class="home-button">Back to Home</a>
+        </header>
+
+        <section class="welcome-card">
+            <div class="welcome-icon">✧</div>
+            <div>
+                <span class="eyebrow">YOUR PERSONAL AI TUTOR</span>
+                <h1>What would you like to learn today?</h1>
+                <p>
+                    Ask any academic question. I'll explain it in simple
+                    words and help you understand it step by step.
+                </p>
+            </div>
+        </section>
+
+        <section class="chat-card">
+
+            <div class="chat-header">
+                <div class="bot-avatar">✦</div>
+                <div class="bot-info">
+                    <strong>Learnova AI</strong>
+                    <span><i class="online-dot"></i> Local AI assistant</span>
+                </div>
+                <button type="button" id="clearChat" class="clear-button">
+                    Clear chat
+                </button>
+            </div>
+
+            <div class="chat-messages" id="chatMessages" aria-live="polite">
+                <div class="message-row bot-row">
+                    <div class="message-avatar">✦</div>
+                    <div class="message-content">
+                        <span class="sender">Learnova AI</span>
+                        <div class="bubble">
+                            Hi, {{ request.user.username }}! 👋
+                            <br><br>
+                            I'm your AI Study Assistant. You can ask me about
+                            programming, science, mathematics, or any topic
+                            you're studying. Let's learn together!
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="suggestions" id="suggestions">
+                <button type="button" class="suggestion">
+                    Explain Python loops
+                </button>
+                <button type="button" class="suggestion">
+                    What is DBMS?
+                </button>
+                <button type="button" class="suggestion">
+                    Explain machine learning
+                </button>
+            </div>
+
+            <form id="chatForm" class="chat-form">
+                {% csrf_token %}
+                <label for="messageInput" class="sr-only">
+                    Enter your study question
+                </label>
+                <textarea
+                    id="messageInput"
+                    name="message"
+                    rows="1"
+                    maxlength="4000"
+                    placeholder="Ask your study doubt here..."
+                    required
+                ></textarea>
+                <button type="submit" id="sendButton" class="send-button">
+                    <span id="sendText">Send</span>
+                    <span aria-hidden="true">➤</span>
+                </button>
+            </form>
+
+            <p class="input-note">
+                Learnova AI can make mistakes. Verify important information
+                with your study materials.
+            </p>
+
+        </section>
+
+        <footer class="page-footer">
+            Made for curious minds · Learn smarter with Learnova
+        </footer>
+
+    </main>
+</div>
+
+<script>
+    const chatForm = document.getElementById("chatForm");
+    const messageInput = document.getElementById("messageInput");
+    const chatMessages = document.getElementById("chatMessages");
+    const sendButton = document.getElementById("sendButton");
+    const sendText = document.getElementById("sendText");
+    const clearChat = document.getElementById("clearChat");
+    const suggestions = document.getElementById("suggestions");
+
+    const initialMessage = chatMessages.innerHTML;
+
+    function addMessage(text, sender) {
+        const row = document.createElement("div");
+        row.className = "message-row " +
+            (sender === "user" ? "user-row" : "bot-row");
+
+        const avatar = document.createElement("div");
+        avatar.className = "message-avatar";
+        avatar.textContent = sender === "user" ? "You" : "✦";
+
+        const content = document.createElement("div");
+        content.className = "message-content";
+
+        const name = document.createElement("span");
+        name.className = "sender";
+        name.textContent = sender === "user" ? "You" : "Learnova AI";
+
+        const bubble = document.createElement("div");
+        bubble.className = "bubble";
+        bubble.textContent = text;
+
+        content.appendChild(name);
+        content.appendChild(bubble);
+        row.appendChild(avatar);
+        row.appendChild(content);
+        chatMessages.appendChild(row);
+
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+        return bubble;
+    }
+
+    async function sendMessage(text) {
+        if (!text.trim() || sendButton.disabled) return;
+
+        addMessage(text, "user");
+        messageInput.value = "";
+        messageInput.style.height = "auto";
+        sendButton.disabled = true;
+        sendText.textContent = "Thinking...";
+        suggestions.hidden = true;
+
+        const loadingBubble = addMessage(
+            "Let me think about your question...",
+            "bot"
+        );
+
+        try {
+            const csrfToken = document.querySelector(
+                "[name=csrfmiddlewaretoken]"
+            ).value;
+
+            const response = await fetch("/ai-assistant/chat/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken
+                },
+                body: JSON.stringify({ message: text })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || "Unable to get an answer.");
+            }
+
+            loadingBubble.textContent = data.reply;
+
+        } catch (error) {
+            loadingBubble.textContent = "Sorry! " + error.message;
+            loadingBubble.classList.add("error-bubble");
+        } finally {
+            sendButton.disabled = false;
+            sendText.textContent = "Send";
+            messageInput.focus();
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+    }
+
+    chatForm.addEventListener("submit", function(event) {
+        event.preventDefault();
+        sendMessage(messageInput.value.trim());
+    });
+
+    messageInput.addEventListener("keydown", function(event) {
+        if (event.key === "Enter" && !event.shiftKey) {
+            event.preventDefault();
+            chatForm.requestSubmit();
+        }
+    });
+
+    messageInput.addEventListener("input", function() {
+        this.style.height = "auto";
+        this.style.height = Math.min(this.scrollHeight, 120) + "px";
+    });
+
+    document.querySelectorAll(".suggestion").forEach(function(button) {
+        button.addEventListener("click", function() {
+            sendMessage(this.textContent.trim());
+        });
+    });
+
+    clearChat.addEventListener("click", function() {
+        if (sendButton.disabled) return;
+        chatMessages.innerHTML = initialMessage;
+        suggestions.hidden = false;
+        messageInput.value = "";
+        messageInput.focus();
+    });
+</script>
+
+</body>
+</html>

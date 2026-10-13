@@ -1,0 +1,109 @@
+
+{% extends "quiz_base.html" %}
+
+{% block title %}{{ quiz.title }} | Learnova{% endblock %}
+
+{% block content %}
+
+<section class="quiz-taking">
+    <a class="back-link" href="{% url 'quiz_list' %}">← Back to quizzes</a>
+
+    <div class="quiz-intro">
+        <span class="eyebrow">{{ quiz.subject }}</span>
+        <h1>{{ quiz.title }}</h1>
+        <p>Choose one answer for each question.</p>
+    </div>
+
+    <div class="quiz-progress-card">
+        <div class="progress-top">
+            <span>Your progress</span>
+            <strong id="progress-text">0 / 15 answered</strong>
+        </div>
+        <div class="progress-track">
+            <div class="progress-fill" id="progress-fill"></div>
+        </div>
+    </div>
+
+    <form method="post"
+          action="{% url 'submit_quiz' quiz.id %}"
+          id="quiz-form">
+        {% csrf_token %}
+
+        {% for question in questions %}
+            <article class="question-card">
+                <div class="question-number">
+                    QUESTION {{ forloop.counter|stringformat:"02d" }}
+                </div>
+
+                <h2>{{ question.question_text }}</h2>
+
+                <div class="answer-options">
+                    <label class="answer-option">
+                        <input type="radio"
+                               name="question_{{ question.id }}"
+                               value="A" required>
+                        <span class="option-letter">A</span>
+                        <span>{{ question.option_a }}</span>
+                    </label>
+
+                    <label class="answer-option">
+                        <input type="radio"
+                               name="question_{{ question.id }}"
+                               value="B">
+                        <span class="option-letter">B</span>
+                        <span>{{ question.option_b }}</span>
+                    </label>
+
+                    <label class="answer-option">
+                        <input type="radio"
+                               name="question_{{ question.id }}"
+                               value="C">
+                        <span class="option-letter">C</span>
+                        <span>{{ question.option_c }}</span>
+                    </label>
+
+                    <label class="answer-option">
+                        <input type="radio"
+                               name="question_{{ question.id }}"
+                               value="D">
+                        <span class="option-letter">D</span>
+                        <span>{{ question.option_d }}</span>
+                    </label>
+                </div>
+            </article>
+        {% endfor %}
+
+        <div class="submit-area">
+            <p>Check your answers before submitting.</p>
+            <button class="btn btn-submit" type="submit">
+                Submit Quiz →
+            </button>
+        </div>
+    </form>
+</section>
+
+<script>
+    const quizForm = document.getElementById("quiz-form");
+    const progressText = document.getElementById("progress-text");
+    const progressFill = document.getElementById("progress-fill");
+    const totalQuestions = 15;
+
+    function updateProgress() {
+        const answered = new Set(
+            Array.from(
+                quizForm.querySelectorAll('input[type="radio"]:checked')
+            ).map(input => input.name)
+        ).size;
+
+        progressText.textContent =
+            `${answered} / ${totalQuestions} answered`;
+
+        progressFill.style.width =
+            `${(answered / totalQuestions) * 100}%`;
+    }
+
+    quizForm.addEventListener("change", updateProgress);
+    updateProgress();
+</script>
+
+{% endblock %}

@@ -1,0 +1,149 @@
+
+{% extends "quiz_base.html" %}
+
+{% block title %}Quiz Knowledge | Learnova{% endblock %}
+
+{% block content %}
+
+<section class="welcome-section">
+    <div>
+        <span class="eyebrow">YOUR LEARNING SPACE</span>
+        <h1>Quiz Knowledge</h1>
+        <p>Explore your subjects, practise with AI quizzes, and review your results.</p>
+    </div>
+    <div class="welcome-icon">✦</div>
+</section>
+
+<section class="dashboard-grid">
+
+    <div class="panel quick-learn-panel">
+        <div class="section-heading">
+            <div>
+                <span class="eyebrow">EXPLORE</span>
+                <h2>Quick Learn</h2>
+                <p>Your uploaded subjects</p>
+            </div>
+            <span class="heading-icon">📚</span>
+        </div>
+
+        <div class="subject-list">
+            {% for subject, materials_list in subjects.items %}
+                <details class="subject-card">
+                    <summary>
+                        <span class="subject-icon">📖</span>
+                        <span class="subject-info">
+                            <strong>{{ subject }}</strong>
+                            <small>{{ materials_list|length }} material(s)</small>
+                        </span>
+                        <span class="subject-arrow">›</span>
+                    </summary>
+
+                    <div class="material-list">
+                        {% for material in materials_list %}
+                            <article class="material-card">
+                                <strong>{{ material.title }}</strong>
+
+                                {% if material.topic %}
+                                    <p>{{ material.topic }}</p>
+                                {% endif %}
+
+                                <form method="post"
+                                      action="{% url 'generate_quiz' material.id %}">
+                                    {% csrf_token %}
+                                    <button class="btn btn-small" type="submit">
+                                        Generate 15 Questions
+                                    </button>
+                                </form>
+                            </article>
+                        {% endfor %}
+                    </div>
+                </details>
+            {% empty %}
+                <div class="empty-state">
+                    <span class="empty-icon">📘</span>
+                    <h3>No subjects yet</h3>
+                    <p>Upload a PDF to start learning from your own materials.</p>
+                    <a class="btn" href="{% url 'study_materials' %}">
+                        Upload Study Material
+                    </a>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="right-column">
+
+        <div class="panel quick-quiz-panel">
+            <span class="eyebrow">PRACTISE & LEARN</span>
+            <div class="large-icon">✎</div>
+            <h2>Quick Quiz</h2>
+            <p>Test your knowledge with 15 questions generated from your PDFs.</p>
+            <a class="btn btn-light" href="#my-quizzes">Explore My Quizzes</a>
+        </div>
+
+        <div class="panel history-panel">
+            <div class="section-heading">
+                <div>
+                    <span class="eyebrow">YOUR ACTIVITY</span>
+                    <h2>Quiz History</h2>
+                </div>
+                <span class="heading-icon">◷</span>
+            </div>
+
+            <div class="history-list">
+                {% for result in results|slice:":4" %}
+                    <a class="history-item"
+                       href="{% url 'quiz_result' result.id %}">
+                        <span class="history-icon">✓</span>
+                        <span class="history-info">
+                            <strong>{{ result.quiz.subject }}</strong>
+                            <small>{{ result.completed_at|date:"d M Y" }}</small>
+                        </span>
+                        <span class="history-score">
+                            {{ result.score }}/{{ result.total_questions }}
+                        </span>
+                    </a>
+                {% empty %}
+                    <p class="muted">Your completed quiz scores will appear here.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<section class="panel my-quizzes" id="my-quizzes">
+    <div class="section-heading">
+        <div>
+            <span class="eyebrow">CONTINUE LEARNING</span>
+            <h2>My Quizzes</h2>
+            <p>Choose a quiz you have already generated.</p>
+        </div>
+    </div>
+
+    <div class="quiz-card-grid">
+        {% for quiz in quizzes %}
+            <article class="generated-quiz-card">
+                <div class="quiz-card-icon">✦</div>
+                <span class="quiz-subject">{{ quiz.subject }}</span>
+                <h3>{{ quiz.title }}</h3>
+
+                {% if quiz.topic %}
+                    <p>{{ quiz.topic }}</p>
+                {% endif %}
+
+                <span class="question-count">15 Questions</span>
+                <a class="btn" href="{% url 'take_quiz' quiz.id %}">
+                    Start Quiz →
+                </a>
+            </article>
+        {% empty %}
+            <div class="empty-state">
+                <h3>No quizzes generated</h3>
+                <p>Choose one of your uploaded materials above to create a quiz.</p>
+            </div>
+        {% endfor %}
+    </div>
+</section>
+
+{% endblock %}
