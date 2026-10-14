@@ -30,6 +30,11 @@ urlpatterns = [
         name="summarize_pdf"
     ),
 
+    path(
+    "study-materials/<int:pk>/summary/",
+    views.view_summary,
+    name="view_summary"
+    ),
 
     path(
         "quizzes/",
@@ -73,7 +78,7 @@ urlpatterns = [
         name="ai_chat_api"
     ),
 
+    path("progress/", views.track_progress, name="track_progress"),
 
-
-
+    
     ]

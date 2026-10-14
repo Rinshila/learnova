@@ -46,9 +46,10 @@
 
     <div class="nav-buttons">
 
-        <a href="{% url 'profile' %}">
-    <button>Profile</button>
-</a>
+        <a href="{% url 'profile' %}" 
+        class="profile-btn">
+            Profile
+        </a>
 
         <a href="{% url 'login' %}"
            class="login-btn">
@@ -234,7 +235,7 @@
 
 
         <div class="feature-card">
-
+            <a href="{% url 'track_progress' %}">Track Progress</a>
             <div class="feature-icon">
                 📊
             </div>

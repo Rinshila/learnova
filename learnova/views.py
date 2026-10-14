@@ -4,6 +4,35 @@ from django.contrib.auth import login,authenticate,logout
 from django.contrib import messages
 from .forms import RegistrationForm, ProfileForm
 from .models import Profile
+import requests
+import threading
+from django.db import close_old_connections
+from pypdf import PdfReader
+
+
+import os
+from io import BytesIO
+
+from django.conf import settings
+from django.contrib.auth.decorators import login_required
+from django.core.files.base import ContentFile
+from django.core.files.storage import default_storage
+from django.http import FileResponse, Http404
+from django.shortcuts import get_object_or_404
+from django.views.decorators.http import require_POST
+from .forms import StudyMaterialForm
+from .models import StudyMaterial
+
+import requests
+import json
+import urllib.request
+import urllib.error
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
+from django.http import JsonResponse, StreamingHttpResponse
+from django.contrib.admin.views.decorators import staff_member_required
 
 
 def register(request):
@@ -107,23 +136,7 @@ def user_logout(request):
     return redirect('login')
 
 
-import os
-from io import BytesIO
 
-from django.conf import settings
-from django.contrib import messages
-from django.contrib.auth.decorators import login_required
-from django.core.files.base import ContentFile
-from django.core.files.storage import default_storage
-from django.http import FileResponse, Http404
-from django.shortcuts import get_object_or_404
-from django.views.decorators.http import require_POST
-
-from pypdf import PdfReader
-from openai import OpenAI
-
-from .forms import StudyMaterialForm
-from .models import StudyMaterial
 
 
 @login_required
@@ -232,20 +245,60 @@ def download_pdf(request, pk):
         raise Http404("PDF file not found.")
 
 
+def _generate_summary(material_id, title, subject, topic, extracted_text):
+    try:
+        payload = {
+            "model": "llama3.2:1b",
+            "stream": False,
+            "keep_alive": "30m",
+            "messages": [
+                {
+                    "role": "system",
+                    "content": (
+                        "You are a study assistant. Summarize the study material "
+                        "in simple English with short headings and bullet points. "
+                        "Include key definitions and a 3-point revision list. "
+                        "Do not invent facts."
+                    ),
+                },
+                {
+                    "role": "user",
+                    "content": (
+                        f"Title: {title}\nSubject: {subject}\nTopic: {topic}\n\n"
+                        f"Study material:\n{extracted_text}"
+                    ),
+                },
+            ],
+            "options": {"temperature": 0.3, "num_ctx": 2048, "num_predict": 350},
+        }
+
+        res = requests.post(
+            "http://127.0.0.1:11434/api/chat",
+            json=payload,
+            timeout=900,
+            proxies={"http": None, "https": None},
+        )
+        res.raise_for_status()
+
+        summary = res.json().get("message", {}).get("content", "").strip()
+        if not summary:
+            raise ValueError("Empty summary returned.")
+
+        material = StudyMaterial.objects.get(pk=material_id)
+        material.summary = summary
+        material.save(update_fields=["summary"])
+        print("AI SUMMARY DONE for material", material_id)
+
+    except Exception as e:
+        print("AI SUMMARY ERROR:", repr(e))
+    finally:
+        close_old_connections()
+
+
 @login_required
 @require_POST
 def summarize_pdf(request, pk):
     material = get_object_or_404(StudyMaterial, pk=pk)
-
-    api_key = os.environ.get("OPENAI_API_KEY")
-
-    if not api_key:
-        messages.error(
-            request,
-            "AI summarization is not configured yet. "
-            "Please configure your AI API key."
-        )
-        return redirect("study_materials")
 
     try:
         with material.pdf_file.open("rb") as pdf:
@@ -254,12 +307,7 @@ def summarize_pdf(request, pk):
             if reader.is_encrypted:
                 raise ValueError("This PDF is password-protected.")
 
-            text_parts = []
-
-            # Limit processing to 50 pages to control cost and memory.
-            for page in reader.pages[:50]:
-                text_parts.append(page.extract_text() or "")
-
+            text_parts = [(page.extract_text() or "") for page in reader.pages[:10]]
             extracted_text = "\n".join(text_parts).strip()
 
         if not extracted_text:
@@ -270,42 +318,23 @@ def summarize_pdf(request, pk):
             )
             return redirect("study_materials")
 
-        # Keep the input within a reasonable size.
-        extracted_text = extracted_text[:40000]
+        extracted_text = extracted_text[:3000]
 
-        client = OpenAI(api_key=api_key)
+        threading.Thread(
+            target=_generate_summary,
+            args=(material.pk, material.title, material.subject,
+                  material.topic, extracted_text),
+            daemon=True,
+        ).start()
 
-        result = client.responses.create(
-            model="gpt-4o-mini",
-            instructions=(
-                "You are a helpful study assistant for students. "
-                "Summarize the supplied study material in simple English. "
-                "Use clear headings, short paragraphs, bullet points, "
-                "important definitions, key concepts, and a short revision "
-                "section. Preserve important facts and formulas. "
-                "Do not invent information not present in the source. "
-                "Mention if the supplied text appears incomplete."
-            ),
-            input=(
-                f"Title: {material.title}\n"
-                f"Subject: {material.subject}\n"
-                f"Topic: {material.topic}\n\n"
-                f"Study material:\n{extracted_text}"
-            ),
-        )
-
-        material.summary = result.output_text
-        material.save(update_fields=["summary"])
-
-        messages.success(
+        messages.info(
             request,
-            "Your study summary has been generated!"
+            "Summary is being generated. This can take 1 to 3 minutes. "
+            "Refresh this page later to see it."
         )
 
-    
     except Exception as e:
         print("AI SUMMARY ERROR:", repr(e))
-
         messages.error(
             request,
             f"Summary failed: {type(e).__name__}. "
@@ -314,14 +343,46 @@ def summarize_pdf(request, pk):
 
     return redirect("study_materials")
 
+@login_required
+def view_summary(request, pk):
+    material = get_object_or_404(StudyMaterial, pk=pk)
+
+    if not material.summary:
+        messages.error(request, "No summary yet. Generate one first.")
+        return redirect("study_materials")
+
+    return render(request, "summary_view.html", {"material": material})
+
 import json
 import re
 import logging
 import ollama
-from django.db.models import Avg,Count
+from django.db.models import Avg, Sum, Max, Count, Q
 from .models import StudyMaterial, Quiz, Question, QuizResult
 import django.db.transaction as transaction
+import time
 
+QUESTION_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "questions": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "question": {"type": "string"},
+                    "A": {"type": "string"},
+                    "B": {"type": "string"},
+                    "C": {"type": "string"},
+                    "D": {"type": "string"},
+                    "answer": {"type": "string", "enum": ["A", "B", "C", "D"]},
+                },
+                "required": ["question", "A", "B", "C", "D", "answer"],
+            },
+        }
+    },
+    "required": ["questions"],
+}
 
 @login_required
 def quiz_list(request):
@@ -353,11 +414,113 @@ def quiz_list(request):
         "results": results,
     })
 
+def _clean_question(item):
+    """Return a validated question dict, or None if it is bad."""
+    if not isinstance(item, dict):
+        return None
 
+    question_text = str(item.get("question", "")).strip()
+    options = {k: str(item.get(k, "")).strip() for k in ("A", "B", "C", "D")}
+    answer = str(item.get("answer", "")).strip().upper()
+
+    if not question_text or any(not v for v in options.values()):
+        return None
+    if answer not in ("A", "B", "C", "D"):
+        return None
+
+    return {
+        "question_text": question_text,
+        "option_a": options["A"],
+        "option_b": options["B"],
+        "option_c": options["C"],
+        "option_d": options["D"],
+        "correct_answer": answer,
+    }
+
+
+def _ask_for_questions(material, text, count):
+    prompt = f"""Write {count} multiple-choice questions from the study material below.
+Use only the material. Keep each question and option short (under 15 words).
+
+Subject: {material.subject}
+Topic: {material.topic}
+
+Study material:
+{text}
+"""
+    res = requests.post(
+        "http://127.0.0.1:11434/api/generate",
+        json={
+            "model": "llama3.2:1b",
+            "prompt": prompt,
+            "stream": False,
+            "format": QUESTION_SCHEMA,
+            "keep_alive": "30m",
+            "options": {"temperature": 0.3, "num_ctx": 2048, "num_predict": 500},
+        },
+        timeout=300,
+        proxies={"http": None, "https": None},
+    )
+    res.raise_for_status()
+    return json.loads(res.json()["response"]).get("questions", [])
+
+def _build_quiz_background(material_id, user_id, extracted_text):
+    try:
+        material = StudyMaterial.objects.get(pk=material_id)
+        validated_questions = []
+        seen = set()
+
+        for attempt in range(4):
+            needed = 5 - len(validated_questions)
+            if needed <= 0:
+                break
+
+            start = time.time()
+
+            
+
+            try:
+                items = _ask_for_questions(material, extracted_text, min(3, needed))
+            except Exception as e:
+                print("QUIZ ERROR:", repr(e))
+                continue
+
+            for item in items:
+                cleaned = _clean_question(item)
+                if cleaned and cleaned["question_text"].lower() not in seen:
+                    seen.add(cleaned["question_text"].lower())
+                    validated_questions.append(cleaned)
+
+            print(f"QUIZ: attempt {attempt + 1} took {time.time() - start:.0f}s, "
+          f"now have {len(validated_questions)}/5")
+            
+        validated_questions = validated_questions[:5]
+
+        if len(validated_questions) < 5:
+            print(f"QUIZ FAILED: only {len(validated_questions)} valid questions")
+            return
+
+        with transaction.atomic():
+            quiz = Quiz.objects.create(
+                title=f"{material.title} - Quiz",
+                subject=material.subject,
+                topic=material.topic,
+                study_material=material,
+                created_by_id=user_id,
+            )
+            Question.objects.bulk_create([
+                Question(quiz=quiz, **item) for item in validated_questions
+            ])
+
+        print("QUIZ DONE for material", material_id)
+
+    except Exception as e:
+        print("QUIZ ERROR:", repr(e))
+    finally:
+        close_old_connections()
 @login_required
 @require_POST
 def generate_quiz(request, material_id):
-    # A user cannot generate a quiz from someone else's PDF.
     material = get_object_or_404(
         StudyMaterial,
         pk=material_id,
@@ -365,20 +528,15 @@ def generate_quiz(request, material_id):
     )
 
     try:
-        # Extract readable text from the uploaded PDF.
         with material.pdf_file.open("rb") as pdf_file:
             reader = PdfReader(pdf_file)
 
             if reader.is_encrypted:
-                messages.error(
-                    request,
-                    "This PDF is password-protected."
-                )
+                messages.error(request, "This PDF is password-protected.")
                 return redirect("quiz_list")
 
             extracted_text = "\n".join(
-                page.extract_text() or ""
-                for page in reader.pages[:40]
+                page.extract_text() or "" for page in reader.pages[:20]
             ).strip()
 
         if not extracted_text:
@@ -389,130 +547,25 @@ def generate_quiz(request, material_id):
             )
             return redirect("quiz_list")
 
-        # Limit input length for local AI generation.
-        extracted_text = extracted_text[:18000]
+        extracted_text = extracted_text[:2000]
 
-        prompt = f"""
-Create exactly 15 multiple-choice questions using ONLY
-the study material provided below.
+        threading.Thread(
+            target=_build_quiz_background,
+            args=(material.pk, request.user.pk, extracted_text),
+            daemon=True,
+        ).start()
 
-Subject: {material.subject}
-Topic: {material.topic}
-Title: {material.title}
-
-Requirements:
-- Exactly 15 distinct questions.
-- Four options for every question: A, B, C, D.
-- Exactly one correct answer per question.
-- Questions and answers must be supported by the PDF.
-- Use clear language suitable for students.
-- Do not repeat questions.
-- Return valid JSON only, without Markdown.
-
-Required JSON structure:
-{{
-  "questions": [
-    {{
-      "question": "Question text",
-      "A": "Option A",
-      "B": "Option B",
-      "C": "Option C",
-      "D": "Option D",
-      "answer": "A"
-    }}
-  ]
-}}
-
-Study material:
-{extracted_text}
-"""
-
-        response = ollama.generate(
-            model="llama3.2",
-            prompt=prompt,
-            format="json",
-            options={"temperature": 0.2}
-        )
-
-        data = json.loads(response["response"])
-        generated_questions = data.get("questions", [])
-
-        if (
-            not isinstance(generated_questions, list)
-            or len(generated_questions) != 15
-        ):
-            messages.error(
-                request,
-                "The AI did not generate exactly 15 questions. "
-                "Please try again."
-            )
-            return redirect("quiz_list")
-
-        validated_questions = []
-
-        for item in generated_questions:
-            if not isinstance(item, dict):
-                raise ValueError("Invalid question format.")
-
-            question_text = str(
-                item.get("question", "")
-            ).strip()
-
-            options = {
-                key: str(item.get(key, "")).strip()
-                for key in ("A", "B", "C", "D")
-            }
-
-            correct_answer = str(
-                item.get("answer", "")
-            ).strip().upper()
-
-            if (
-                not question_text
-                or any(not value for value in options.values())
-                or correct_answer not in ("A", "B", "C", "D")
-            ):
-                raise ValueError("Invalid question or options.")
-
-            validated_questions.append({
-                "question_text": question_text,
-                "option_a": options["A"],
-                "option_b": options["B"],
-                "option_c": options["C"],
-                "option_d": options["D"],
-                "correct_answer": correct_answer,
-            })
-
-        # Save the quiz and all 15 questions together.
-        with transaction.atomic():
-            quiz = Quiz.objects.create(
-                title=f"{material.title} - Quiz",
-                subject=material.subject,
-                topic=material.topic,
-                study_material=material,
-                created_by=request.user,
-            )
-
-            Question.objects.bulk_create([
-                Question(quiz=quiz, **item)
-                for item in validated_questions
-            ])
-
-        messages.success(
+        messages.info(
             request,
-            "Your 15-question quiz is ready!"
+            "Your quiz is being generated. This can take 3 to 8 minutes. "
+            "Refresh this page later to see it in your quizzes."
         )
-
-        return redirect("take_quiz", quiz_id=quiz.id)
 
     except Exception:
         logging.exception("Learnova quiz generation failed")
-        messages.error(
-            request,
-            "Quiz generation failed. Check that Ollama is running, "
-            "llama3.2 is installed, and the PDF is readable."
-        )
-        return redirect("quiz_list")
+        messages.error(request, "Quiz generation failed. Check the terminal.")
+
+    return redirect("quiz_list")
 
 
 @login_required
@@ -525,10 +578,10 @@ def take_quiz(request, quiz_id):
 
     questions = quiz.questions.all()
 
-    if questions.count() != 15:
+    if questions.count() != 5:
         messages.error(
             request,
-            "This quiz does not contain 15 valid questions."
+            "This quiz does not contain 5 valid questions."
         )
         return redirect("quiz_list")
 
@@ -549,7 +602,7 @@ def submit_quiz(request, quiz_id):
 
     questions = list(quiz.questions.all())
 
-    if len(questions) != 15:
+    if len(questions) != 5:
         messages.error(request, "This quiz is incomplete.")
         return redirect("quiz_list")
 
@@ -569,13 +622,13 @@ def submit_quiz(request, quiz_id):
         if selected == question.correct_answer:
             score += 1
 
-    percentage = round((score / 15) * 100, 2)
+    percentage = round((score / 5) * 100, 2)
 
     result = QuizResult.objects.create(
         student=request.user,
         quiz=quiz,
         score=score,
-        total_questions=15,
+        total_questions=5,
         percentage=percentage,
         answers=answers,
     )
@@ -609,19 +662,7 @@ def quiz_result(request, result_id):
     })
 
 
-import urllib.request
-import urllib.error
-import requests
-from django.http import JsonResponse
-from django.views.decorators.http import require_POST
 
-import json
-import urllib.request
-import urllib.error
-from django.http import JsonResponse
-from django.views.decorators.http import require_POST
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render
 
 @login_required
 def ai_assistant(request):
@@ -633,91 +674,186 @@ def ai_assistant(request):
 def ai_chat_api(request):
     try:
         data = json.loads(request.body)
-        message = data.get("message", "").strip()
-
-        if not message:
-            return JsonResponse(
-                {"error": "Please enter your question."},
-                status=400
-            )
-
-        if len(message) > 4000:
-            return JsonResponse(
-                {"error": "Your question is too long. Use fewer than 4000 characters."},
-                status=400
-            )
-
-        payload = {
-            "model": "llama3.2",
-            "stream": False,
-            "keep_alive": "30m",
-            "messages": [
-                {
-                    "role": "system",
-                    "content": (
-                        "You are Learnova AI Study Assistant, a friendly tutor. "
-                        "Help students clear academic doubts in simple English. "
-                        "Explain concepts step by step and use examples when useful. "
-                        "For programming questions, provide understandable code "
-                        "and explain it. If a question is unclear, ask for clarification. "
-                        "Do not invent facts when uncertain."
-                    )
-                },
-                {
-                    "role": "user",
-                    "content": message
-                }
-            ],
-            "options": {
-                "temperature": 0.5,
-                "num_predict": 300
-            }
-        }
-
-        res = requests.post(
-        "http://127.0.0.1:11434/api/chat",
-        json=payload,
-        timeout=300,
-        proxies={"http": None, "https": None},
-        )
-        res.raise_for_status()
-        result = res.json()
-
-        answer = result.get("message", {}).get("content", "").strip()
-
-        if not answer:
-            return JsonResponse(
-                {"error": "The AI did not return an answer. Please try again."},
-                status=502
-            )
-
-        return JsonResponse({"reply": answer})
-
     except json.JSONDecodeError:
-        return JsonResponse(
-            {"error": "Invalid request. Please try again."},
-            status=400
-        )
+        return JsonResponse({"error": "Invalid request. Please try again."}, status=400)
 
-    except requests.exceptions.Timeout:
-        return JsonResponse(
-            {"error": "The AI took too long to respond. Please try again."},
-            status=504
-        )
+    message = data.get("message", "").strip()
 
-    except requests.exceptions.RequestException:
-        return JsonResponse(
+    if not message:
+        return JsonResponse({"error": "Please enter your question."}, status=400)
+
+    if len(message) > 4000:
+        return JsonResponse({"error": "Your question is too long."}, status=400)
+
+    payload = {
+        "model": "llama3.2:1b",
+        "stream": True,
+        "keep_alive": "30m",
+        "messages": [
             {
-                "error": (
-                    "Cannot connect to Ollama. Please start Ollama "
-                    "and make sure the llama3.2 model is installed."
-                )
+                "role": "system",
+                "content": (
+                    "You are Learnova AI Study Assistant, a friendly tutor. "
+                    "Explain in simple English with a short example. "
+                    "Keep answers under 150 words unless the student asks for more."
+                ),
             },
-            status=503
-        )
+            {"role": "user", "content": message},
+        ],
+        "options": {
+            "temperature": 0.5,
+            "num_predict": 250,
+            "num_ctx": 2048,
+        },
+    }
 
-    except Exception:
-        return JsonResponse(
-            {"error": "Something went wrong. Please try again."},
-            status=500
-        )
+    def stream():
+        try:
+            with requests.post(
+                "http://127.0.0.1:11434/api/chat",
+                json=payload,
+                stream=True,
+                timeout=300,
+                proxies={"http": None, "https": None},
+            ) as res:
+                res.raise_for_status()
+                for line in res.iter_lines():
+                    if not line:
+                        continue
+                    chunk = json.loads(line.decode("utf-8"))
+                    yield chunk.get("message", {}).get("content", "")
+        except requests.exceptions.Timeout:
+            yield "\n[The AI took too long. Please try again.]"
+        except requests.exceptions.RequestException:
+            yield "\n[Cannot connect to Ollama. Please make sure it is running.]"
+        except Exception:
+            yield "\n[Something went wrong. Please try again.]"
+
+    return StreamingHttpResponse(stream(), content_type="text/plain; charset=utf-8")
+
+@login_required
+def track_progress(request):
+    results = QuizResult.objects.filter(student=request.user).select_related("quiz")
+
+    # Overall numbers
+    overall = results.aggregate(
+        attempts=Count("id"),
+        average=Avg("percentage"),
+        best=Max("percentage"),
+        correct=Sum("score"),
+        total=Sum("total_questions"),
+    )
+    overall = {
+        "attempts": overall["attempts"] or 0,
+        "average": round(float(overall["average"] or 0)),
+        "best": round(float(overall["best"] or 0)),
+        "correct": overall["correct"] or 0,
+        "total": overall["total"] or 0,
+    }
+
+    # Per-subject breakdown
+    subject_rows = (
+        results.values("quiz__subject")
+        .annotate(attempts=Count("id"), average=Avg("percentage"), best=Max("percentage"))
+        .order_by("-average")
+    )
+
+    subject_stats = []
+    for row in subject_rows:
+        average = round(float(row["average"] or 0))
+        if average >= 80:
+            status, label = "strong", "Strong"
+        elif average >= 60:
+            status, label = "good", "Good"
+        else:
+            status, label = "weak", "Needs practice"
+
+        subject_stats.append({
+            "subject": (row["quiz__subject"] or "").strip() or "Other",
+            "attempts": row["attempts"],
+            "average": average,
+            "best": round(float(row["best"] or 0)),
+            "status": status,
+            "label": label,
+        })
+
+    # Last 10 attempts, oldest to newest, for the bar chart
+    recent = list(results.order_by("-completed_at")[:10])[::-1]
+    recent_chart = [
+        {
+            "height": max(round(float(r.percentage)), 4),  # min height so 0% is still visible
+            "percentage": round(float(r.percentage)),
+            "label": r.completed_at.strftime("%d %b"),
+            "title": r.quiz.title,
+            "result_id": r.id,
+        }
+        for r in recent
+    ]
+
+    # Trend: compare last 3 attempts with the 3 before them
+    trend = None
+    if len(recent) >= 4:
+        last = [float(r.percentage) for r in recent[-3:]]
+        before = [float(r.percentage) for r in recent[:-3][-3:]]
+        diff = sum(last) / len(last) - sum(before) / len(before)
+        trend = round(diff)
+
+    return render(request, "progress.html", {
+        "overall": overall,
+        "subject_stats": subject_stats,
+        "recent_chart": recent_chart,
+        "trend": trend,
+        "plan": _study_plan(request.user),   
+    })
+
+    
+
+from datetime import date, timedelta
+from django.db.models import Avg
+from django.utils.dateparse import parse_date
+
+def _subject(name):
+    return (name or "").strip() or "Other"
+
+
+def _study_plan(user):
+    # Average score per subject
+    averages = {
+        _subject(r["quiz__subject"]): float(r["avg"])
+        for r in QuizResult.objects.filter(student=user)
+        .values("quiz__subject").annotate(avg=Avg("percentage"))
+    }
+
+    # Subjects from uploaded materials, weakest first (untested = 50)
+    subjects = {_subject(m.subject) for m in StudyMaterial.objects.filter(uploaded_by=user)}
+    subjects = sorted(subjects, key=lambda s: averages.get(s, 50))
+
+    # Weak subjects (under 60%) appear twice
+    order = []
+    for s in subjects:
+        order += [s] * (2 if averages.get(s, 100) < 60 else 1)
+
+    plan = []
+    for i in range(7 if order else 0):
+        subject = order[i % len(order)]
+        avg = averages.get(subject)
+
+        if avg is None:
+            tip = "Read your material, then generate a quiz."
+        elif avg < 60:
+            tip = "Re-read slowly, ask the AI Assistant about hard parts, then retake a quiz."
+        elif avg < 80:
+            tip = "Skim your notes and take a quiz."
+        else:
+            tip = "Quick revision to stay sharp."
+
+        plan.append({
+            "day": i + 1,
+            "date": date.today() + timedelta(days=i),
+            "subject": subject,
+            "avg": round(avg) if avg is not None else None,
+            "tip": tip,
+        })
+    return plan
+
+

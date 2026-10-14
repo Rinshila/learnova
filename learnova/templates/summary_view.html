@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ material.title }} - Summary</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 0 20px;
+            line-height: 1.7;
+            color: #222;
+        }
+        h1 { color: #4c1d95; margin-bottom: 4px; }
+        .meta { color: #666; margin-bottom: 24px; }
+        .summary { white-space: pre-wrap; }
+        .actions { margin-bottom: 24px; }
+        .actions button, .actions a {
+            background: #6d4ae0;
+            color: #fff;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 15px;
+            margin-right: 8px;
+        }
+        @media print {
+            .actions { display: none; }
+            body { margin: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="actions">
+        <button onclick="window.print()">⇩ Save as PDF</button>
+        <a href="{% url 'study_materials' %}">← Back</a>
+    </div>
+
+    <h1>{{ material.title }}</h1>
+    <p class="meta">
+        Subject: {{ material.subject }} | Topic: {{ material.topic }}
+    </p>
+
+    <h2>AI Study Summary</h2>
+    <div class="summary">{{ material.summary }}</div>
+
+</body>
+</html>

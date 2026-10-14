@@ -1,0 +1,103 @@
+{% extends "quiz_base.html" %}
+
+{% block title %}Track Progress | Learnova{% endblock %}
+
+{% block content %}
+
+<section class="welcome-section">
+    <div>
+        <span class="eyebrow">YOUR LEARNING SPACE</span>
+        <h1>Track Progress</h1>
+        <p>See how you are doing across subjects and where to improve.</p>
+    </div>
+    <div class="welcome-icon">📈</div>
+</section>
+
+{% if overall.attempts == 0 %}
+    <section class="panel">
+        <div class="empty-state">
+            <span class="empty-icon">📊</span>
+            <h3>No progress yet</h3>
+            <p>Take your first quiz and your progress will appear here.</p>
+            <a class="btn" href="{% url 'quiz_list' %}">Go to Quizzes</a>
+        </div>
+    </section>
+{% else %}
+
+<section class="stat-grid">
+    <div class="stat-card">
+        <span class="stat-label">Quizzes taken</span>
+        <strong class="stat-value">{{ overall.attempts }}</strong>
+    </div>
+    <div class="stat-card">
+        <span class="stat-label">Average score</span>
+        <strong class="stat-value">{{ overall.average }}%</strong>
+        {% if trend is not None %}
+            {% if trend > 0 %}
+                <small class="trend up">▲ {{ trend }}% vs earlier quizzes</small>
+            {% elif trend < 0 %}
+                <small class="trend down">▼ {{ trend }}% vs earlier quizzes</small>
+            {% else %}
+                <small class="trend">No change vs earlier quizzes</small>
+            {% endif %}
+        {% endif %}
+    </div>
+    <div class="stat-card">
+        <span class="stat-label">Best score</span>
+        <strong class="stat-value">{{ overall.best }}%</strong>
+    </div>
+    <div class="stat-card">
+        <span class="stat-label">Correct answers</span>
+        <strong class="stat-value">{{ overall.correct }}/{{ overall.total }}</strong>
+    </div>
+</section>
+
+<section class="panel">
+    <div class="section-heading">
+        <div>
+            <span class="eyebrow">TREND</span>
+            <h2>Last {{ recent_chart|length }} quizzes</h2>
+        </div>
+    </div>
+
+    <div class="bar-chart">
+        {% for item in recent_chart %}
+            <a class="bar-col" href="{% url 'quiz_result' item.result_id %}"
+               title="{{ item.title }}: {{ item.percentage }}%">
+                <span class="bar-value">{{ item.percentage }}%</span>
+                
+                <span class="bar-label">{{ item.label }}</span>
+            </a>
+        {% endfor %}
+    </div>
+</section>
+
+<section class="panel">
+    <div class="section-heading">
+        <div>
+            <span class="eyebrow">BY SUBJECT</span>
+            <h2>Subject performance</h2>
+        </div>
+    </div>
+
+    <div class="subject-progress-list">
+        {% for s in subject_stats %}
+            <div class="subject-progress">
+                <div class="subject-progress-top">
+                    <strong>{{ s.subject }}</strong>
+                    <span class="badge badge-{{ s.status }}">{{ s.label }}</span>
+                </div>
+                <div class="progress-track">
+                   
+                </div>
+                <small>
+                    Average {{ s.average }}% · Best {{ s.best }}% · {{ s.attempts }} attempt{{ s.attempts|pluralize }}
+                </small>
+            </div>
+        {% endfor %}
+    </div>
+</section>
+
+{% endif %}
+
+{% endblock %}

@@ -411,11 +411,18 @@
                             <h4>AI Study Summary</h4>
                         </div>
 
-                        {% if material.summary %}
+                                                {% if material.summary %}
 
                         <div class="summary-content">
                             {{ material.summary|linebreaksbr }}
                         </div>
+
+                        <a href="{% url 'view_summary' material.pk %}"
+                           target="_blank"
+                           rel="noopener"
+                           class="btn btn-download">
+                            ⇩ Open Summary / Save as PDF
+                        </a>
 
                         {% else %}
 
@@ -424,6 +431,8 @@
                         </p>
 
                         {% endif %}
+
+                        
 
                         <form method="POST"
                               action="{% url 'summarize_pdf' material.pk %}">
@@ -437,6 +446,7 @@
                                     Summarize PDF with AI
                                 {% endif %}
                             </button>
+                            
 
                         </form>
 

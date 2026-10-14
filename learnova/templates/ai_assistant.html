@@ -199,14 +199,25 @@
                 body: JSON.stringify({ message: text })
             });
 
-            const data = await response.json();
+    if (!response.ok) {
+    let msg = "Server error (" + response.status + ")";
+    try {
+        const err = await response.json();
+        msg = err.error || msg;
+    } catch {}
+    throw new Error(msg);
+}
 
-            if (!response.ok) {
-                throw new Error(data.error || "Unable to get an answer.");
-            }
+    loadingBubble.textContent = "";
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
 
-            loadingBubble.textContent = data.reply;
-
+    while (true) {
+     const { done, value } = await reader.read();
+        if (done) break;
+    loadingBubble.textContent += decoder.decode(value, { stream: true });
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
         } catch (error) {
             loadingBubble.textContent = "Sorry! " + error.message;
             loadingBubble.classList.add("error-bubble");
